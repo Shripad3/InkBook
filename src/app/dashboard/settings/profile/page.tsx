@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Loader2, Copy, CheckCircle2 } from "lucide-react";
+import { Loader2, Copy, CheckCircle2, CreditCard } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +33,8 @@ export default function ProfileSettingsPage() {
   const [styleTags, setStyleTags] = useState<string[]>([]);
   const [slug, setSlug] = useState("");
   const [copied, setCopied] = useState(false);
+  const [stripeConnected, setStripeConnected] = useState(false);
+  const [connectingStripe, setConnectingStripe] = useState(false);
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -50,6 +52,7 @@ export default function ProfileSettingsPage() {
         });
         setStyleTags(data.style_tags ?? []);
         setSlug(data.slug);
+        setStripeConnected(!!data.stripe_account_id);
       }
       setLoading(false);
     });
@@ -75,6 +78,18 @@ export default function ProfileSettingsPage() {
 
     if (error) toast.error("Failed to save: " + error.message);
     else toast.success("Profile saved");
+  }
+
+  async function connectStripe() {
+    setConnectingStripe(true);
+    const res = await fetch("/api/stripe/connect", { method: "POST" });
+    const data = await res.json();
+    setConnectingStripe(false);
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      toast.error("Failed to connect Stripe: " + data.error);
+    }
   }
 
   function copyBookingLink() {
@@ -104,6 +119,30 @@ export default function ProfileSettingsPage() {
               {copied ? <CheckCircle2 className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Stripe Connect */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Payment account</CardTitle>
+          <CardDescription>Connect Stripe to receive deposit payments from clients</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {stripeConnected ? (
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+              <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
+              <p className="text-sm text-emerald-400 font-medium">Stripe account connected</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">You haven&apos;t connected a Stripe account yet. Clients won&apos;t be able to pay deposits until you do.</p>
+              <Button variant="gold" onClick={connectStripe} disabled={connectingStripe}>
+                <CreditCard className="h-4 w-4 mr-2" />
+                {connectingStripe ? <Loader2 className="h-4 w-4 animate-spin" /> : "Connect Stripe Account"}
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
