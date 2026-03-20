@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Allow: /book/
+Allow: /pricing
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /onboarding
