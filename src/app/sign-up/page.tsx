@@ -31,11 +31,10 @@ export default function SignUpPage() {
     // Generate a slug from the email
     const slug = data.email.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "-");
 
-    const { error } = await supabase.auth.signUp({
+    const { data: authData, error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
       options: {
-        emailRedirectTo: `${window.location.origin}/api/auth/callback`,
         data: { slug },
       },
     });
@@ -47,8 +46,12 @@ export default function SignUpPage() {
       return;
     }
 
-    toast.success("Check your email to confirm your account");
-    router.push("/sign-in?message=check-email");
+    if (authData.session) {
+      router.push("/onboarding");
+    } else {
+      toast.success("Check your email to confirm your account");
+      router.push("/sign-in?message=check-email");
+    }
   }
 
   return (
