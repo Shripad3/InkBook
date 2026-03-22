@@ -13,33 +13,38 @@ export async function POST() {
 
   let accountId = artist.stripe_account_id;
 
-  // Create Express account if not already created
-  if (!accountId) {
-    const account = await stripe.accounts.create({
-      type: "express",
-      country: "IE",
-      email: user.email,
-      capabilities: {
-        card_payments: { requested: true },
-        transfers: { requested: true },
-      },
-      business_type: "individual",
-      metadata: { artist_id: artist.id },
+  try {
+    // Create Express account if not already created
+    if (!accountId) {
+      const account = await stripe.accounts.create({
+        type: "express",
+        country: "IE",
+        email: user.email,
+        capabilities: {
+          card_payments: { requested: true },
+          transfers: { requested: true },
+        },
+        business_type: "individual",
+        metadata: { artist_id: artist.id },
+      });
+      accountId = account.id;
+      await adminClient
+        .from("artists")
+        .update({ stripe_account_id: accountId })
+        .eq("id", artist.id);
+    }
+
+    // Create onboarding link
+    const accountLink = await stripe.accountLinks.create({
+      account: accountId,
+      refresh_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings/profile?stripe=refresh`,
+      return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings/profile?stripe=success`,
+      type: "account_onboarding",
     });
-    accountId = account.id;
-    await adminClient
-      .from("artists")
-      .update({ stripe_account_id: accountId })
-      .eq("id", artist.id);
+
+    return NextResponse.json({ url: accountLink.url });
+  } catch (err) {
+    console.error("Stripe connect error:", err);
+    return NextResponse.json({ error: err instanceof Error ? err.message : "Unknown error" }, { status: 500 });
   }
-
-  // Create onboarding link
-  const accountLink = await stripe.accountLinks.create({
-    account: accountId,
-    refresh_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings/profile?stripe=refresh`,
-    return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings/profile?stripe=success`,
-    type: "account_onboarding",
-  });
-
-  return NextResponse.json({ url: accountLink.url });
 }

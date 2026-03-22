@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Loader2, Copy, CheckCircle2, CreditCard } from "lucide-react";
+import { Loader2, Copy, CheckCircle2, CreditCard, ChevronDown } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +35,7 @@ export default function ProfileSettingsPage() {
   const [copied, setCopied] = useState(false);
   const [stripeConnected, setStripeConnected] = useState(false);
   const [connectingStripe, setConnectingStripe] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -148,55 +149,65 @@ export default function ProfileSettingsPage() {
 
       {/* Profile form */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Artist profile</CardTitle>
+        <CardHeader
+          className="cursor-pointer select-none"
+          onClick={() => setProfileOpen((o) => !o)}
+        >
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base">Artist profile</CardTitle>
+            <ChevronDown
+              className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${profileOpen ? "rotate-180" : ""}`}
+            />
+          </div>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-2">
-              <Label>Name *</Label>
-              <Input {...register("name")} />
-              {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label>Bio</Label>
-              <Textarea rows={4} {...register("bio")} />
-            </div>
-            <div className="space-y-2">
-              <Label>Instagram handle</Label>
-              <div className="flex items-center gap-1">
-                <span className="text-muted-foreground">@</span>
-                <Input {...register("instagram_handle")} />
+        {profileOpen && (
+          <CardContent>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div className="space-y-2">
+                <Label>Name *</Label>
+                <Input {...register("name")} />
+                {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Studio name</Label>
-              <Input {...register("studio_name")} />
-            </div>
-            <div className="space-y-2">
-              <Label>Styles</Label>
-              <div className="flex flex-wrap gap-2">
-                {STYLE_TAGS.map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() => toggleTag(tag)}
-                    className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
-                      styleTags.includes(tag)
-                        ? "border-[#c9a84c] bg-[#c9a84c]/10 text-[#c9a84c]"
-                        : "border-border text-muted-foreground hover:border-[#c9a84c]/50"
-                    }`}
-                  >
-                    {tag}
-                  </button>
-                ))}
+              <div className="space-y-2">
+                <Label>Bio</Label>
+                <Textarea rows={4} {...register("bio")} />
               </div>
-            </div>
-            <Button type="submit" variant="gold" disabled={saving}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save changes"}
-            </Button>
-          </form>
-        </CardContent>
+              <div className="space-y-2">
+                <Label>Instagram handle</Label>
+                <div className="flex items-center gap-1">
+                  <span className="text-muted-foreground">@</span>
+                  <Input {...register("instagram_handle")} />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Studio name</Label>
+                <Input {...register("studio_name")} />
+              </div>
+              <div className="space-y-2">
+                <Label>Styles</Label>
+                <div className="flex flex-wrap gap-2">
+                  {STYLE_TAGS.map((tag) => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => toggleTag(tag)}
+                      className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                        styleTags.includes(tag)
+                          ? "border-[#c9a84c] bg-[#c9a84c]/10 text-[#c9a84c]"
+                          : "border-border text-muted-foreground hover:border-[#c9a84c]/50"
+                      }`}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <Button type="submit" variant="gold" disabled={saving}>
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save changes"}
+              </Button>
+            </form>
+          </CardContent>
+        )}
       </Card>
     </div>
   );

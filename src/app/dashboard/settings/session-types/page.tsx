@@ -12,9 +12,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { Database } from "@/types/database";
 
 type SessionType = Database["public"]["Tables"]["session_types"]["Row"];
@@ -22,7 +23,8 @@ type SessionType = Database["public"]["Tables"]["session_types"]["Row"];
 export default function SessionTypesPage() {
   const [loading, setLoading] = useState(true);
   const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
-  const [showForm, setShowForm] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -57,23 +59,72 @@ export default function SessionTypesPage() {
     setLoading(false);
   }
 
+  function openAdd() {
+    setEditingId(null);
+    reset({
+      duration_minutes: 120,
+      buffer_minutes: 30,
+      deposit_type: "fixed",
+      deposit_value: 50,
+      requires_consultation: false,
+      requires_reference_image: false,
+      min_notice_hours: 48,
+      max_advance_days: 60,
+    });
+    setModalOpen(true);
+  }
+
+  function startEdit(st: SessionType) {
+    setEditingId(st.id);
+    reset({
+      name: st.name,
+      duration_minutes: st.duration_minutes,
+      buffer_minutes: st.buffer_minutes,
+      price_from: st.price_from ?? undefined,
+      price_to: st.price_to ?? undefined,
+      deposit_type: st.deposit_type as "fixed" | "percentage",
+      deposit_value: st.deposit_value,
+      requires_consultation: st.requires_consultation,
+      requires_reference_image: st.requires_reference_image,
+      min_notice_hours: st.min_notice_hours,
+      max_advance_days: st.max_advance_days,
+      description: st.description ?? undefined,
+    });
+    setModalOpen(true);
+  }
+
+  function closeModal() {
+    setModalOpen(false);
+    setEditingId(null);
+    reset();
+  }
+
   async function onSave(data: SessionTypeInput) {
     setSaving(true);
     const supabase = createClient();
-    const { data: artist } = await supabase.from("artists").select("id").single();
-    if (!artist) return;
 
-    const { error } = await supabase.from("session_types").insert({
-      artist_id: artist.id,
-      ...data,
-      description: data.description ?? null,
-    });
+    if (editingId) {
+      const { error } = await supabase.from("session_types").update({
+        ...data,
+        description: data.description ?? null,
+      }).eq("id", editingId);
+      setSaving(false);
+      if (error) { toast.error("Failed to save"); return; }
+      toast.success("Session type updated");
+    } else {
+      const { data: artist } = await supabase.from("artists").select("id").single();
+      if (!artist) { setSaving(false); return; }
+      const { error } = await supabase.from("session_types").insert({
+        artist_id: artist.id,
+        ...data,
+        description: data.description ?? null,
+      });
+      setSaving(false);
+      if (error) { toast.error("Failed to save"); return; }
+      toast.success("Session type added");
+    }
 
-    setSaving(false);
-    if (error) { toast.error("Failed to save"); return; }
-    toast.success("Session type added");
-    reset();
-    setShowForm(false);
+    closeModal();
     fetchTypes();
   }
 
@@ -98,7 +149,7 @@ export default function SessionTypesPage() {
     <div className="space-y-6 max-w-2xl">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Session types</h1>
-        <Button variant="gold" size="sm" onClick={() => setShowForm(true)}>
+        <Button variant="gold" size="sm" onClick={openAdd}>
           <Plus className="h-4 w-4 mr-1" /> Add
         </Button>
       </div>
@@ -132,6 +183,13 @@ export default function SessionTypesPage() {
                 <Button
                   variant="ghost"
                   size="icon"
+                  onClick={() => startEdit(st)}
+                >
+                  <Pencil className="h-4 w-4 text-muted-foreground" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={() => deleteType(st.id)}
                   disabled={deletingId === st.id}
                 >
@@ -147,68 +205,66 @@ export default function SessionTypesPage() {
         </Card>
       ))}
 
-      {showForm && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">New session type</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit(onSave)} className="space-y-4">
+      <Dialog open={modalOpen} onOpenChange={(open) => { if (!open) closeModal(); }}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingId ? "Edit session type" : "New session type"}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit(onSave)} className="space-y-4 mt-2">
+            <div className="space-y-2">
+              <Label>Name *</Label>
+              <Input placeholder="e.g. Half-day session" {...register("name")} />
+              {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Name *</Label>
-                <Input placeholder="e.g. Half-day session" {...register("name")} />
-                {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Duration (min)</Label>
-                  <Input type="number" {...register("duration_minutes", { valueAsNumber: true })} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Buffer (min)</Label>
-                  <Input type="number" {...register("buffer_minutes", { valueAsNumber: true })} />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Price from (€)</Label>
-                  <Input type="number" {...register("price_from", { valueAsNumber: true, setValueAs: (v) => v === "" ? null : Number(v) })} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Price to (€)</Label>
-                  <Input type="number" {...register("price_to", { valueAsNumber: true, setValueAs: (v) => v === "" ? null : Number(v) })} />
-                </div>
+                <Label>Duration (min)</Label>
+                <Input type="number" {...register("duration_minutes", { valueAsNumber: true })} />
               </div>
               <div className="space-y-2">
-                <Label>Deposit</Label>
-                <div className="flex items-center gap-4">
-                  <div className="flex gap-3">
-                    {["fixed", "percentage"].map((v) => (
-                      <label key={v} className="flex items-center gap-2 cursor-pointer text-sm">
-                        <input type="radio" value={v} {...register("deposit_type")} className="accent-[#c9a84c]" />
-                        {v === "fixed" ? "Fixed (€)" : "Percentage (%)"}
-                      </label>
-                    ))}
-                  </div>
-                  <Input type="number" className="w-28" {...register("deposit_value", { valueAsNumber: true })} />
-                </div>
+                <Label>Buffer (min)</Label>
+                <Input type="number" {...register("buffer_minutes", { valueAsNumber: true })} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Price from (€)</Label>
+                <Input type="number" {...register("price_from", { valueAsNumber: true, setValueAs: (v) => v === "" ? null : Number(v) })} />
               </div>
               <div className="space-y-2">
-                <Label>Description</Label>
-                <Textarea rows={2} {...register("description")} />
+                <Label>Price to (€)</Label>
+                <Input type="number" {...register("price_to", { valueAsNumber: true, setValueAs: (v) => v === "" ? null : Number(v) })} />
               </div>
-              <div className="flex gap-3">
-                <Button type="submit" variant="gold" disabled={saving}>
-                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Add"}
-                </Button>
-                <Button type="button" variant="outline" onClick={() => { setShowForm(false); reset(); }}>
-                  Cancel
-                </Button>
+            </div>
+            <div className="space-y-2">
+              <Label>Deposit</Label>
+              <div className="flex items-center gap-4">
+                <div className="flex gap-3">
+                  {["fixed", "percentage"].map((v) => (
+                    <label key={v} className="flex items-center gap-2 cursor-pointer text-sm">
+                      <input type="radio" value={v} {...register("deposit_type")} className="accent-[#c9a84c]" />
+                      {v === "fixed" ? "Fixed (€)" : "Percentage (%)"}
+                    </label>
+                  ))}
+                </div>
+                <Input type="number" className="w-28" {...register("deposit_value", { valueAsNumber: true })} />
               </div>
-            </form>
-          </CardContent>
-        </Card>
-      )}
+            </div>
+            <div className="space-y-2">
+              <Label>Description</Label>
+              <Textarea rows={2} {...register("description")} />
+            </div>
+            <div className="flex gap-3 pt-2">
+              <Button type="submit" variant="gold" disabled={saving}>
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : editingId ? "Save changes" : "Add"}
+              </Button>
+              <Button type="button" variant="outline" onClick={closeModal}>
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
+import React, { Suspense, useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { Loader2, CreditCard, Calendar, Clock, MapPin } from "lucide-react";
@@ -140,10 +140,11 @@ function ConfirmPageInner({ slug }: { slug: string }) {
   );
 }
 
-export default function ConfirmPage({ params }: { params: { slug: string } }) {
+export default function ConfirmPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = React.use(params);
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
-      <ConfirmPageInner slug={params.slug} />
+      <ConfirmPageInner slug={slug} />
     </Suspense>
   );
 }
