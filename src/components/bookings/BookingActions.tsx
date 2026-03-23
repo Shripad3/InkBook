@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2, Save } from "lucide-react";
+import { Loader2, Save, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +15,7 @@ interface Props {
     id: string;
     status: string;
     artist_notes: string | null;
+    deposit_paid: boolean;
   };
 }
 
@@ -23,6 +24,8 @@ export function BookingActions({ booking }: Props) {
   const [notes, setNotes] = useState(booking.artist_notes ?? "");
   const [saving, setSaving] = useState(false);
   const [updating, setUpdating] = useState<string | null>(null);
+  const [togglingDeposit, setTogglingDeposit] = useState(false);
+  const [depositPaid, setDepositPaid] = useState(booking.deposit_paid);
 
   async function updateStatus(status: BookingStatus) {
     setUpdating(status);
@@ -37,6 +40,27 @@ export function BookingActions({ booking }: Props) {
       router.refresh();
     } else {
       toast.error("Failed to update booking");
+    }
+  }
+
+  async function toggleDepositPaid() {
+    setTogglingDeposit(true);
+    const newValue = !depositPaid;
+    const res = await fetch(`/api/bookings/${booking.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        deposit_paid: newValue,
+        ...(newValue && booking.status === "pending_deposit" ? { status: "confirmed" } : {}),
+      }),
+    });
+    setTogglingDeposit(false);
+    if (res.ok) {
+      setDepositPaid(newValue);
+      toast.success(newValue ? "Deposit marked as paid" : "Deposit marked as unpaid");
+      router.refresh();
+    } else {
+      toast.error("Failed to update deposit");
     }
   }
 
@@ -63,6 +87,24 @@ export function BookingActions({ booking }: Props) {
             <CardTitle className="text-base">Actions</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-3">
+            {!depositPaid && (
+              <Button
+                variant="gold"
+                onClick={toggleDepositPaid}
+                disabled={togglingDeposit}
+              >
+                {togglingDeposit ? <Loader2 className="h-4 w-4 animate-spin" /> : <><CheckCircle2 className="h-4 w-4 mr-1" />Mark deposit paid</>}
+              </Button>
+            )}
+            {depositPaid && (
+              <Button
+                variant="outline"
+                onClick={toggleDepositPaid}
+                disabled={togglingDeposit}
+              >
+                {togglingDeposit ? <Loader2 className="h-4 w-4 animate-spin" /> : "Mark deposit unpaid"}
+              </Button>
+            )}
             {booking.status === "confirmed" && (
               <Button
                 variant="secondary"

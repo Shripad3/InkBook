@@ -248,7 +248,7 @@ export default async function BookingDetailPage({
       )}
 
       {/* Artist notes + actions */}
-      <BookingActions booking={booking} />
+      <BookingActions booking={{ ...booking, deposit_paid: booking.deposit_paid }} />
     </div>
   );
 }

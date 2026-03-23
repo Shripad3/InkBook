@@ -34,7 +34,7 @@ export async function PATCH(
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await request.json();
-  const { status, artistNotes } = body;
+  const { status, artistNotes, deposit_paid } = body;
 
   // Verify artist owns this booking
   const { data: bookingData } = await adminClient
@@ -53,6 +53,7 @@ export async function PATCH(
   const updates: Record<string, unknown> = {};
   if (status) updates.status = status;
   if (artistNotes !== undefined) updates.artist_notes = artistNotes;
+  if (deposit_paid !== undefined) updates.deposit_paid = deposit_paid;
 
   const { data: updated, error } = await adminClient
     .from("bookings")

@@ -1,6 +1,6 @@
 import { adminClient } from "@/lib/supabase/admin";
 import { resend, FROM_EMAIL, FROM_ARTIST_EMAIL } from "@/lib/resend/client";
-import { sendSMS, buildSMS24h, buildSMS3h, buildConsentReminderSMS } from "@/lib/twilio/messages";
+import { sendSMS, buildSMS24h, buildSMS3h } from "@/lib/twilio/messages";
 import { BookingConfirmationEmail } from "@/lib/resend/templates/BookingConfirmation";
 import { ArtistNewBookingEmail } from "@/lib/resend/templates/ArtistNewBooking";
 import { PrepReminderEmail } from "@/lib/resend/templates/PrepReminder";
@@ -114,9 +114,16 @@ async function dispatch(notification: NotificationRow): Promise<void> {
     }
 
     case "consent_reminder_24h": {
-      if (!booking.consent_form_signed_at && client.phone) {
+      if (!booking.consent_form_signed_at) {
         const token = createToken(booking.id, 30);
-        await sendSMS(client.phone, buildConsentReminderSMS(client.first_name, `${APP_URL}/consent/${token}`));
+        const consentUrl = `${APP_URL}/consent/${token}`;
+        const html = await render(ConsentFormLinkEmail({ clientName, artistName, date, time, consentUrl }));
+        await resend.emails.send({
+          from: FROM_ARTIST_EMAIL(artistName),
+          to: client.email,
+          subject: `Action required: Sign your consent form for ${date}`,
+          html,
+        });
       }
       break;
     }
