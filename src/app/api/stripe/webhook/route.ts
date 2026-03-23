@@ -35,7 +35,7 @@ export async function POST(request: Request) {
       // Schedule deposit_paid notification
       await adminClient.from("notification_log").insert({
         booking_id: bookingId,
-        type: "deposit_paid",
+        type: "deposit_paid_client",
         channel: "email",
         status: "pending",
       });
