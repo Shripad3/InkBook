@@ -126,9 +126,14 @@ export async function handleSubscriptionUpdated(
 
   const plan = getPlanFromPriceId(subscription.items.data[0]?.price.id);
 
+  const endsAt = subscription.cancel_at_period_end && subscription.cancel_at
+    ? new Date(subscription.cancel_at * 1000).toISOString()
+    : null;
+
   await adminClient.from("artists").update({
     subscription_plan: plan,
     subscription_status: subscription.status === "active" ? "active" : "past_due",
+    subscription_ends_at: endsAt,
   }).eq("id", artist.id);
 }
 
@@ -148,6 +153,7 @@ export async function handleSubscriptionDeleted(
   await adminClient.from("artists").update({
     subscription_status: "cancelled",
     subscription_plan: null,
+    subscription_ends_at: null,
   }).eq("id", artist.id);
 }
 

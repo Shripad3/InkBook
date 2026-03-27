@@ -7,6 +7,7 @@ interface Props {
   date: string;
   time: string;
   depositAmount: string;
+  cancelUrl: string;
 }
 
 export function BookingConfirmationEmail({
@@ -16,6 +17,7 @@ export function BookingConfirmationEmail({
   date,
   time,
   depositAmount,
+  cancelUrl,
 }: Props) {
   return (
     <Html>
@@ -51,8 +53,12 @@ export function BookingConfirmationEmail({
 
           <Hr style={{ borderColor: "#2a2a2a", margin: "24px 0" }} />
           <Text style={{ color: "#71717a", fontSize: "12px" }}>
+            Need to cancel?{" "}
+            <Link href={cancelUrl} style={{ color: "#c9a84c" }}>Cancel your booking</Link>.
+            Deposits are non-refundable if cancelled within 48 hours of your appointment.
+          </Text>
+          <Text style={{ color: "#71717a", fontSize: "12px" }}>
             Booking managed by <Link href="https://inkbook.io" style={{ color: "#c9a84c" }}>InkBook</Link>.
-            Deposits are non-refundable if cancelled within 48 hours.
           </Text>
         </Container>
       </Body>

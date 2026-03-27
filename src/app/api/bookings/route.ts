@@ -41,6 +41,34 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Session type not found" }, { status: 404 });
   }
 
+  // Solo plan: enforce 50 booking/month limit
+  const { data: artist } = await adminClient
+    .from("artists")
+    .select("subscription_plan")
+    .eq("id", artistId)
+    .single();
+
+  if (artist?.subscription_plan === "solo") {
+    const now = new Date();
+    const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
+    const monthEnd   = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)).toISOString();
+
+    const { count } = await adminClient
+      .from("bookings")
+      .select("id", { count: "exact", head: true })
+      .eq("artist_id", artistId)
+      .in("status", ["pending_deposit", "confirmed", "completed"])
+      .gte("starts_at", monthStart)
+      .lt("starts_at", monthEnd);
+
+    if ((count ?? 0) >= 50) {
+      return NextResponse.json(
+        { error: "Booking limit reached", code: "SOLO_LIMIT_REACHED" },
+        { status: 403 }
+      );
+    }
+  }
+
   // Upsert client by email
   const { data: existingClient } = await adminClient
     .from("clients")

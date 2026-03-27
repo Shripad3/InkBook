@@ -10,7 +10,7 @@ export default async function BillingPage() {
 
   const { data: artist } = await adminClient
     .from("artists")
-    .select("subscription_plan, subscription_status, trial_ends_at, stripe_customer_id")
+    .select("subscription_plan, subscription_status, trial_ends_at, stripe_customer_id, subscription_ends_at")
     .eq("user_id", user.id)
     .single();
 
@@ -27,6 +27,7 @@ export default async function BillingPage() {
       subscriptionStatus={artist.subscription_status}
       trialDaysLeft={isTrialing ? trialDaysLeft : null}
       hasStripeCustomer={!!artist.stripe_customer_id}
+      subscriptionEndsAt={(artist as typeof artist & { subscription_ends_at: string | null }).subscription_ends_at ?? null}
     />
   );
 }

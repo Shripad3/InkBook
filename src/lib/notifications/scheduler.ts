@@ -65,9 +65,15 @@ async function dispatch(notification: NotificationRow): Promise<void> {
   switch (notification.type) {
     case "deposit_paid_client": {
       if (notification.channel === "email") {
+        const daysUntil = Math.max(1, Math.ceil(
+          (new Date(booking.starts_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+        ) + 1);
+        const cancelToken = createToken(booking.id, daysUntil);
+        const cancelUrl = `${APP_URL}/cancel/${cancelToken}`;
         const html = await render(BookingConfirmationEmail({
           clientName, artistName, sessionType: sessionType.name,
           date, time, depositAmount: formatCurrency(booking.deposit_amount),
+          cancelUrl,
         }));
         await resend.emails.send({
           from: FROM_EMAIL,

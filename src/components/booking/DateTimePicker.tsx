@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { format, addDays, isBefore, startOfDay } from "date-fns";
+import { format, addDays, isBefore, isAfter, startOfDay } from "date-fns";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { useBookingStore } from "@/store/bookingStore";
 import { Button } from "@/components/ui/button";
@@ -95,7 +95,7 @@ export function DateTimePicker({ artist }: Props) {
             variant="ghost"
             size="icon"
             onClick={prevWeek}
-            disabled={isBefore(currentWeekStart, today)}
+            disabled={!isAfter(currentWeekStart, today)}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>

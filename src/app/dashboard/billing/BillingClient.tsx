@@ -73,9 +73,10 @@ interface Props {
   subscriptionStatus: string;
   trialDaysLeft: number | null;
   hasStripeCustomer: boolean;
+  subscriptionEndsAt: string | null;
 }
 
-export function BillingClient({ currentPlan, subscriptionStatus, trialDaysLeft, hasStripeCustomer }: Props) {
+export function BillingClient({ currentPlan, subscriptionStatus, trialDaysLeft, hasStripeCustomer, subscriptionEndsAt }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
 
@@ -109,9 +110,17 @@ export function BillingClient({ currentPlan, subscriptionStatus, trialDaysLeft, 
     }
   }
 
+  const cancelDate = subscriptionEndsAt
+    ? new Date(subscriptionEndsAt).toLocaleDateString("en-IE", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : null;
+
   const statusLabel: Record<string, string> = {
     trial: `Trial — ${trialDaysLeft ?? 0} day${trialDaysLeft !== 1 ? "s" : ""} left`,
-    active: "Active",
+    active: cancelDate ? `Active · Cancels ${cancelDate}` : "Active",
     past_due: "Past due",
     cancelled: "Cancelled",
     paused: "Paused",
@@ -146,6 +155,14 @@ export function BillingClient({ currentPlan, subscriptionStatus, trialDaysLeft, 
       </div>
 
       <Separator className="bg-[#2a2a2a]" />
+
+      {cancelDate && (
+        <div className="rounded-md border border-yellow-800 bg-yellow-950/30 px-4 py-3 text-sm text-yellow-400">
+          Your subscription is active until{" "}
+          <span className="font-semibold">{cancelDate}</span>. After that, your
+          account will be downgraded and new bookings will be paused.
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {PLANS.map((plan) => {
