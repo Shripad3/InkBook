@@ -101,9 +101,9 @@ export default async function BookingPage({ params }: Props) {
                   {artist.bio}
                 </p>
               )}
-              {artist.style_tags.length > 0 && (
+              {(artist.style_tags ?? []).length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mt-3">
-                  {artist.style_tags.map((tag) => (
+                  {(artist.style_tags ?? []).map((tag) => (
                     <span
                       key={tag}
                       className="px-2 py-0.5 text-xs rounded-full border border-[#c9a84c]/30 text-[#c9a84c]"
