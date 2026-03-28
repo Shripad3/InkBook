@@ -4,312 +4,682 @@ export type Json =
   | boolean
   | null
   | { [key: string]: Json | undefined }
-  | Json[];
+  | Json[]
 
-export type SubscriptionPlan = "solo" | "studio" | "studio_pro";
-export type SubscriptionStatus = "trial" | "active" | "past_due" | "cancelled" | "paused";
-export type BookingStatus =
-  | "pending_deposit"
-  | "confirmed"
-  | "completed"
-  | "cancelled_artist"
-  | "cancelled_client"
-  | "no_show";
-export type DepositType = "fixed" | "percentage";
-export type NotificationChannel = "email" | "sms";
-export type NotificationStatus = "pending" | "sent" | "failed";
-export type NotificationType =
-  | "booking_created"
-  | "deposit_paid_client"
-  | "deposit_paid_artist"
-  | "prep_reminder_48h"
-  | "consent_reminder_24h"
-  | "sms_24h"
-  | "sms_3h"
-  | "aftercare"
-  | "healed_photo_request";
-
-export interface Database {
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.4"
+  }
   public: {
     Tables: {
       artists: {
         Row: {
-          id: string;
-          user_id: string;
-          slug: string;
-          name: string | null;
-          bio: string | null;
-          instagram_handle: string | null;
-          studio_name: string | null;
-          style_tags: string[];
-          stripe_account_id: string | null;
-          stripe_customer_id: string | null;
-          subscription_plan: SubscriptionPlan | null;
-          subscription_status: SubscriptionStatus;
-          trial_ends_at: string;
-          timezone: string;
-          completed_onboarding_at: string | null;
-          created_at: string;
-        };
+          bio: string | null
+          completed_onboarding_at: string | null
+          created_at: string
+          id: string
+          instagram_handle: string | null
+          name: string | null
+          slug: string
+          stripe_account_id: string | null
+          stripe_customer_id: string | null
+          studio_name: string | null
+          style_tags: string[] | null
+          subscription_ends_at: string | null
+          subscription_plan:
+            | Database["public"]["Enums"]["subscription_plan"]
+            | null
+          subscription_status: Database["public"]["Enums"]["subscription_status"]
+          timezone: string
+          trial_ends_at: string
+          user_id: string
+        }
         Insert: {
-          id?: string;
-          user_id: string;
-          slug: string;
-          name?: string | null;
-          bio?: string | null;
-          instagram_handle?: string | null;
-          studio_name?: string | null;
-          style_tags?: string[];
-          stripe_account_id?: string | null;
-          stripe_customer_id?: string | null;
-          subscription_plan?: SubscriptionPlan | null;
-          subscription_status?: SubscriptionStatus;
-          trial_ends_at?: string;
-          timezone?: string;
-          completed_onboarding_at?: string | null;
-          created_at?: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["artists"]["Insert"]>;
-        Relationships: [];
-      };
-      working_hours: {
-        Row: {
-          id: string;
-          artist_id: string;
-          day_of_week: number;
-          start_time: string;
-          end_time: string;
-          is_available: boolean;
-        };
-        Insert: {
-          id?: string;
-          artist_id: string;
-          day_of_week: number;
-          start_time: string;
-          end_time: string;
-          is_available?: boolean;
-        };
-        Update: Partial<Database["public"]["Tables"]["working_hours"]["Insert"]>;
-        Relationships: [];
-      };
-      session_types: {
-        Row: {
-          id: string;
-          artist_id: string;
-          name: string;
-          duration_minutes: number;
-          buffer_minutes: number;
-          price_from: number | null;
-          price_to: number | null;
-          deposit_type: DepositType;
-          deposit_value: number;
-          requires_consultation: boolean;
-          requires_reference_image: boolean;
-          min_notice_hours: number;
-          max_advance_days: number;
-          description: string | null;
-          is_active: boolean;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          artist_id: string;
-          name: string;
-          duration_minutes: number;
-          buffer_minutes?: number;
-          price_from?: number | null;
-          price_to?: number | null;
-          deposit_type?: DepositType;
-          deposit_value?: number;
-          requires_consultation?: boolean;
-          requires_reference_image?: boolean;
-          min_notice_hours?: number;
-          max_advance_days?: number;
-          description?: string | null;
-          is_active?: boolean;
-        };
-        Update: Partial<Database["public"]["Tables"]["session_types"]["Insert"]>;
-        Relationships: [];
-      };
+          bio?: string | null
+          completed_onboarding_at?: string | null
+          created_at?: string
+          id?: string
+          instagram_handle?: string | null
+          name?: string | null
+          slug: string
+          stripe_account_id?: string | null
+          stripe_customer_id?: string | null
+          studio_name?: string | null
+          style_tags?: string[] | null
+          subscription_ends_at?: string | null
+          subscription_plan?:
+            | Database["public"]["Enums"]["subscription_plan"]
+            | null
+          subscription_status?: Database["public"]["Enums"]["subscription_status"]
+          timezone?: string
+          trial_ends_at?: string
+          user_id: string
+        }
+        Update: {
+          bio?: string | null
+          completed_onboarding_at?: string | null
+          created_at?: string
+          id?: string
+          instagram_handle?: string | null
+          name?: string | null
+          slug?: string
+          stripe_account_id?: string | null
+          stripe_customer_id?: string | null
+          studio_name?: string | null
+          style_tags?: string[] | null
+          subscription_ends_at?: string | null
+          subscription_plan?:
+            | Database["public"]["Enums"]["subscription_plan"]
+            | null
+          subscription_status?: Database["public"]["Enums"]["subscription_status"]
+          timezone?: string
+          trial_ends_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       blocked_times: {
         Row: {
-          id: string;
-          artist_id: string;
-          starts_at: string;
-          ends_at: string;
-          reason: string | null;
-          created_at: string;
-        };
+          artist_id: string
+          created_at: string
+          ends_at: string
+          id: string
+          reason: string | null
+          starts_at: string
+        }
         Insert: {
-          id?: string;
-          artist_id: string;
-          starts_at: string;
-          ends_at: string;
-          reason?: string | null;
-        };
-        Update: Partial<Database["public"]["Tables"]["blocked_times"]["Insert"]>;
-        Relationships: [];
-      };
-      clients: {
-        Row: {
-          id: string;
-          email: string;
-          first_name: string;
-          last_name: string;
-          phone: string | null;
-          is_no_show_flagged: boolean;
-          no_show_count: number;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          email: string;
-          first_name: string;
-          last_name: string;
-          phone?: string | null;
-          is_no_show_flagged?: boolean;
-          no_show_count?: number;
-        };
-        Update: Partial<Database["public"]["Tables"]["clients"]["Insert"]>;
-        Relationships: [];
-      };
+          artist_id: string
+          created_at?: string
+          ends_at: string
+          id?: string
+          reason?: string | null
+          starts_at: string
+        }
+        Update: {
+          artist_id?: string
+          created_at?: string
+          ends_at?: string
+          id?: string
+          reason?: string | null
+          starts_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocked_times_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "artists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
-          id: string;
-          artist_id: string;
-          session_type_id: string;
-          client_id: string;
-          starts_at: string;
-          ends_at: string;
-          status: BookingStatus;
-          placement: string | null;
-          size_estimate: string | null;
-          style_description: string | null;
-          is_coverup: boolean;
-          coverup_description: string | null;
-          medical_notes: string | null;
-          deposit_amount: number;
-          deposit_paid: boolean;
-          deposit_payment_intent_id: string | null;
-          balance_amount: number | null;
-          balance_paid: boolean;
-          consent_form_sent_at: string | null;
-          consent_form_signed_at: string | null;
-          consent_form_pdf_url: string | null;
-          artist_notes: string | null;
-          aftercare_sent_at: string | null;
-          healed_photo_request_sent_at: string | null;
-          created_at: string;
-        };
+          aftercare_sent_at: string | null
+          artist_id: string
+          artist_notes: string | null
+          balance_amount: number | null
+          balance_paid: boolean
+          client_id: string
+          consent_form_pdf_url: string | null
+          consent_form_sent_at: string | null
+          consent_form_signed_at: string | null
+          coverup_description: string | null
+          created_at: string
+          deposit_amount: number
+          deposit_paid: boolean
+          deposit_payment_intent_id: string | null
+          ends_at: string
+          healed_photo_request_sent_at: string | null
+          id: string
+          is_coverup: boolean
+          medical_notes: string | null
+          placement: string | null
+          session_type_id: string
+          size_estimate: string | null
+          starts_at: string
+          status: Database["public"]["Enums"]["booking_status"]
+          style_description: string | null
+        }
         Insert: {
-          id?: string;
-          artist_id: string;
-          session_type_id: string;
-          client_id: string;
-          starts_at: string;
-          ends_at: string;
-          status?: BookingStatus;
-          placement?: string | null;
-          size_estimate?: string | null;
-          style_description?: string | null;
-          is_coverup?: boolean;
-          coverup_description?: string | null;
-          medical_notes?: string | null;
-          deposit_amount?: number;
-          deposit_paid?: boolean;
-          deposit_payment_intent_id?: string | null;
-          balance_amount?: number | null;
-          balance_paid?: boolean;
-          consent_form_sent_at?: string | null;
-          consent_form_signed_at?: string | null;
-          consent_form_pdf_url?: string | null;
-          artist_notes?: string | null;
-          aftercare_sent_at?: string | null;
-          healed_photo_request_sent_at?: string | null;
-        };
-        Update: Partial<Database["public"]["Tables"]["bookings"]["Insert"]>;
-        Relationships: [];
-      };
-      reference_images: {
+          aftercare_sent_at?: string | null
+          artist_id: string
+          artist_notes?: string | null
+          balance_amount?: number | null
+          balance_paid?: boolean
+          client_id: string
+          consent_form_pdf_url?: string | null
+          consent_form_sent_at?: string | null
+          consent_form_signed_at?: string | null
+          coverup_description?: string | null
+          created_at?: string
+          deposit_amount?: number
+          deposit_paid?: boolean
+          deposit_payment_intent_id?: string | null
+          ends_at: string
+          healed_photo_request_sent_at?: string | null
+          id?: string
+          is_coverup?: boolean
+          medical_notes?: string | null
+          placement?: string | null
+          session_type_id: string
+          size_estimate?: string | null
+          starts_at: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          style_description?: string | null
+        }
+        Update: {
+          aftercare_sent_at?: string | null
+          artist_id?: string
+          artist_notes?: string | null
+          balance_amount?: number | null
+          balance_paid?: boolean
+          client_id?: string
+          consent_form_pdf_url?: string | null
+          consent_form_sent_at?: string | null
+          consent_form_signed_at?: string | null
+          coverup_description?: string | null
+          created_at?: string
+          deposit_amount?: number
+          deposit_paid?: boolean
+          deposit_payment_intent_id?: string | null
+          ends_at?: string
+          healed_photo_request_sent_at?: string | null
+          id?: string
+          is_coverup?: boolean
+          medical_notes?: string | null
+          placement?: string | null
+          session_type_id?: string
+          size_estimate?: string | null
+          starts_at?: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          style_description?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "artists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_session_type_id_fkey"
+            columns: ["session_type_id"]
+            isOneToOne: false
+            referencedRelation: "session_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clients: {
         Row: {
-          id: string;
-          booking_id: string;
-          storage_path: string;
-          uploaded_at: string;
-        };
-        Insert: { id?: string; booking_id: string; storage_path: string };
-        Update: Partial<Database["public"]["Tables"]["reference_images"]["Insert"]>;
-        Relationships: [];
-      };
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          is_no_show_flagged: boolean
+          last_name: string
+          no_show_count: number
+          phone: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          first_name: string
+          id?: string
+          is_no_show_flagged?: boolean
+          last_name: string
+          no_show_count?: number
+          phone?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          first_name?: string
+          id?: string
+          is_no_show_flagged?: boolean
+          last_name?: string
+          no_show_count?: number
+          phone?: string | null
+        }
+        Relationships: []
+      }
       healed_photos: {
         Row: {
-          id: string;
-          booking_id: string;
-          storage_path: string;
-          submitted_at: string;
-        };
-        Insert: { id?: string; booking_id: string; storage_path: string };
-        Update: Partial<Database["public"]["Tables"]["healed_photos"]["Insert"]>;
-        Relationships: [];
-      };
-      portfolio_images: {
-        Row: {
-          id: string;
-          artist_id: string;
-          storage_path: string;
-          display_order: number;
-          uploaded_at: string;
-        };
+          booking_id: string
+          id: string
+          storage_path: string
+          submitted_at: string
+        }
         Insert: {
-          id?: string;
-          artist_id: string;
-          storage_path: string;
-          display_order?: number;
-        };
-        Update: Partial<Database["public"]["Tables"]["portfolio_images"]["Insert"]>;
-        Relationships: [];
-      };
+          booking_id: string
+          id?: string
+          storage_path: string
+          submitted_at?: string
+        }
+        Update: {
+          booking_id?: string
+          id?: string
+          storage_path?: string
+          submitted_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "healed_photos_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_log: {
         Row: {
-          id: string;
-          booking_id: string;
-          type: NotificationType;
-          channel: NotificationChannel;
-          scheduled_for: string | null;
-          sent_at: string | null;
-          status: NotificationStatus;
-          error_message: string | null;
-          created_at: string;
-        };
+          booking_id: string
+          channel: Database["public"]["Enums"]["notification_channel"]
+          created_at: string
+          error_message: string | null
+          id: string
+          scheduled_for: string | null
+          sent_at: string | null
+          status: Database["public"]["Enums"]["notification_status"]
+          type: Database["public"]["Enums"]["notification_type"]
+        }
         Insert: {
-          id?: string;
-          booking_id: string;
-          type: NotificationType;
-          channel: NotificationChannel;
-          scheduled_for?: string | null;
-          sent_at?: string | null;
-          status?: NotificationStatus;
-          error_message?: string | null;
-        };
-        Update: Partial<Database["public"]["Tables"]["notification_log"]["Insert"]>;
-        Relationships: [];
-      };
-    };
-    Views: Record<string, never>;
+          booking_id: string
+          channel: Database["public"]["Enums"]["notification_channel"]
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["notification_status"]
+          type: Database["public"]["Enums"]["notification_type"]
+        }
+        Update: {
+          booking_id?: string
+          channel?: Database["public"]["Enums"]["notification_channel"]
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["notification_status"]
+          type?: Database["public"]["Enums"]["notification_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_log_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      portfolio_images: {
+        Row: {
+          artist_id: string
+          display_order: number
+          id: string
+          storage_path: string
+          uploaded_at: string
+        }
+        Insert: {
+          artist_id: string
+          display_order?: number
+          id?: string
+          storage_path: string
+          uploaded_at?: string
+        }
+        Update: {
+          artist_id?: string
+          display_order?: number
+          id?: string
+          storage_path?: string
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolio_images_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "artists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reference_images: {
+        Row: {
+          booking_id: string
+          id: string
+          storage_path: string
+          uploaded_at: string
+        }
+        Insert: {
+          booking_id: string
+          id?: string
+          storage_path: string
+          uploaded_at?: string
+        }
+        Update: {
+          booking_id?: string
+          id?: string
+          storage_path?: string
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reference_images_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_types: {
+        Row: {
+          artist_id: string
+          buffer_minutes: number
+          created_at: string
+          deposit_type: Database["public"]["Enums"]["deposit_type"]
+          deposit_value: number
+          description: string | null
+          duration_minutes: number
+          id: string
+          is_active: boolean
+          max_advance_days: number
+          min_notice_hours: number
+          name: string
+          price_from: number | null
+          price_to: number | null
+          requires_consultation: boolean
+          requires_reference_image: boolean
+        }
+        Insert: {
+          artist_id: string
+          buffer_minutes?: number
+          created_at?: string
+          deposit_type?: Database["public"]["Enums"]["deposit_type"]
+          deposit_value?: number
+          description?: string | null
+          duration_minutes: number
+          id?: string
+          is_active?: boolean
+          max_advance_days?: number
+          min_notice_hours?: number
+          name: string
+          price_from?: number | null
+          price_to?: number | null
+          requires_consultation?: boolean
+          requires_reference_image?: boolean
+        }
+        Update: {
+          artist_id?: string
+          buffer_minutes?: number
+          created_at?: string
+          deposit_type?: Database["public"]["Enums"]["deposit_type"]
+          deposit_value?: number
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          is_active?: boolean
+          max_advance_days?: number
+          min_notice_hours?: number
+          name?: string
+          price_from?: number | null
+          price_to?: number | null
+          requires_consultation?: boolean
+          requires_reference_image?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_types_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "artists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      working_hours: {
+        Row: {
+          artist_id: string
+          day_of_week: number
+          end_time: string
+          id: string
+          is_available: boolean
+          start_time: string
+        }
+        Insert: {
+          artist_id: string
+          day_of_week: number
+          end_time: string
+          id?: string
+          is_available?: boolean
+          start_time: string
+        }
+        Update: {
+          artist_id?: string
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          is_available?: boolean
+          start_time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "working_hours_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "artists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
     Functions: {
-      get_artist_id: {
-        Args: Record<string, never>;
-        Returns: string;
-      };
-    };
+      get_artist_id: { Args: never; Returns: string }
+    }
     Enums: {
-      subscription_plan: SubscriptionPlan;
-      subscription_status: SubscriptionStatus;
-      booking_status: BookingStatus;
-      deposit_type: DepositType;
-      notification_channel: NotificationChannel;
-      notification_status: NotificationStatus;
-      notification_type: NotificationType;
-    };
-  };
+      booking_status:
+        | "pending_deposit"
+        | "confirmed"
+        | "completed"
+        | "cancelled_artist"
+        | "cancelled_client"
+        | "no_show"
+      deposit_type: "fixed" | "percentage"
+      notification_channel: "email" | "sms"
+      notification_status: "pending" | "sent" | "failed"
+      notification_type:
+        | "booking_created"
+        | "deposit_paid_client"
+        | "deposit_paid_artist"
+        | "prep_reminder_48h"
+        | "consent_reminder_24h"
+        | "sms_24h"
+        | "sms_3h"
+        | "aftercare"
+        | "healed_photo_request"
+      subscription_plan: "solo" | "studio" | "studio_pro"
+      subscription_status:
+        | "trial"
+        | "active"
+        | "past_due"
+        | "cancelled"
+        | "paused"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
 }
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      booking_status: [
+        "pending_deposit",
+        "confirmed",
+        "completed",
+        "cancelled_artist",
+        "cancelled_client",
+        "no_show",
+      ],
+      deposit_type: ["fixed", "percentage"],
+      notification_channel: ["email", "sms"],
+      notification_status: ["pending", "sent", "failed"],
+      notification_type: [
+        "booking_created",
+        "deposit_paid_client",
+        "deposit_paid_artist",
+        "prep_reminder_48h",
+        "consent_reminder_24h",
+        "sms_24h",
+        "sms_3h",
+        "aftercare",
+        "healed_photo_request",
+      ],
+      subscription_plan: ["solo", "studio", "studio_pro"],
+      subscription_status: [
+        "trial",
+        "active",
+        "past_due",
+        "cancelled",
+        "paused",
+      ],
+    },
+  },
+} as const

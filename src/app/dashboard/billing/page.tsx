@@ -27,7 +27,7 @@ export default async function BillingPage() {
       subscriptionStatus={artist.subscription_status}
       trialDaysLeft={isTrialing ? trialDaysLeft : null}
       hasStripeCustomer={!!artist.stripe_customer_id}
-      subscriptionEndsAt={(artist as typeof artist & { subscription_ends_at: string | null }).subscription_ends_at ?? null}
+      subscriptionEndsAt={artist.subscription_ends_at ?? null}
     />
   );
 }
