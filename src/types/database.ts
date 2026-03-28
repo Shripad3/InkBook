@@ -683,3 +683,8 @@ export const Constants = {
     },
   },
 } as const
+
+export type BookingStatus = Database["public"]["Enums"]["booking_status"]
+export type NotificationType = Database["public"]["Enums"]["notification_type"]
+export type SubscriptionPlan = Database["public"]["Enums"]["subscription_plan"]
+export type SubscriptionStatus = Database["public"]["Enums"]["subscription_status"]
