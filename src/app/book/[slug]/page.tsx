@@ -6,6 +6,7 @@ import type { Metadata } from "next";
 import { Instagram } from "lucide-react";
 
 export const revalidate = 60;
+export const dynamicParams = true;
 
 interface Props {
   params: Promise<{ slug: string }>;
